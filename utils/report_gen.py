@@ -161,29 +161,29 @@ class PDFReportGenerator:
             header=header,
             is_emerging=is_emerging,
             identity=IdentitySection(
-                what_it_is=project.description or "A protocol or application within the decentralized ecosystem.",
+                what_it_is=project.description if project.description else f"Project identity and core value proposition have not been publicly disclosed. Classification: {project.category or 'Unspecified'}.",
                 problem_it_addresses=self._get_problem_statement(project),
                 who_it_is_for=self._get_target_audience(project),
                 what_it_is_not=self._get_exclusion_statement(project)
             ),
-            core_explanation=project.description or f"{project.name} is building infrastructure for the decentralized web.",
+            core_explanation=project.description if project.description else f"{project.name}: Core technical approach and system objectives are not documented in identified public sources. Further intelligence requires direct project engagement.",
             architecture_overview=self._get_architecture_overview(project),
             build_status=BuildStatusSection(
                 repo_url=project.github_url,
-                repo_visibility="Public" if project.github_url else "Private / Restricted",
+                repo_visibility="Public" if project.github_url else "Not publicly accessible",
                 stars=project.github_stars or 0,
-                contributors="Active" if project.github_contributors and project.github_contributors > 5 else "Limited" if project.github_contributors else "None detected",
-                stage=project.stage.value.capitalize() if project.stage else "Early-stage development",
-                stage_anchors=["Product live"] if project.stage == ProjectStage.MAINNET else ["Development cycles"]
+                contributors="Active" if project.github_contributors and project.github_contributors > 5 else "Limited" if project.github_contributors else "No public repository identified",
+                stage=project.stage.value.capitalize() if project.stage else "Development stage undisclosed",
+                stage_anchors=["Verified mainnet deployment"] if project.stage == ProjectStage.MAINNET else ["Stage classification based on available signals"]
             ),
-            team_info=f"Official team disclosures are currently { 'partially verified' if project.is_verified else 'limited' }. Personnel primarily operating in public/technical roles.",
+            team_info=self._get_team_info(project),
             team_members=[TeamMember(name=m.name, role=m.role) for m in project.team_members] if project.team_members else [],
             funding=FundingSection(
-                total_raised=f"${total_raised:,.2f}" if total_raised > 0 else "Undisclosed",
+                total_raised=f"${total_raised:,.2f}" if total_raised > 0 else "No institutional funding rounds disclosed",
                 history=[FundingRound(date=r.announced_date, round_type=r.round_type.value.capitalize() if r.round_type else "Round", amount=f"${r.amount_raised:,.2f}" if r.amount_raised else "Undisclosed", lead_investor=None) for r in funding_rounds],
-                lead_investors_summary="Direct capital injection from institutional partners." if funding_rounds else "No institutional funding history detected."
+                lead_investors_summary=f"{len(funding_rounds)} confirmed institutional round(s)" if funding_rounds else "No institutional capital structure information available"
             ),
-            positioning_statement=f"Positioned as a {project.category or project.sector or 'technical protocol'} within the global ecosystem.",
+            positioning_statement=self._get_positioning_statement(project),
             integration_status="Publicly confirmed integrations or production partnerships are not yet documented.",
             adoption=adoption,
             risks_unknowns=self._get_risks_and_unknowns(project, funding_rounds),
@@ -350,44 +350,75 @@ class PDFReportGenerator:
         return buffer
     
     def _get_problem_statement(self, project):
-        cat = (project.category or "").lower()
-        if not project.description:
-            if "security" in cat: return "Current blockchain security models rely heavily on reactive manual intervention, creating a window of vulnerability between threat detection and response as protocols lack automated defensive logic."
-            return f"The {project.sector or 'blockchain'} sector faces complexity in operationalizing {project.category or 'infrastructure'} without standardized, automated frameworks, necessitating a shift toward deterministic execution layers."
-        return f"Most systems in the {project.sector or 'blockchain'} layer rely on preventative or reactive manual oversight. {project.name} targets the gap between discovery and execution by providing a structured, programmable framework for automating {project.category or 'this domain'}."
+        """Evidence-bound problem statement - only use verified description."""
+        if project.description:
+            return f"According to available sources: {project.description}"
+        return "No problem statement or value proposition has been publicly disclosed."
 
     def _get_target_audience(self, project):
-        cat = (project.category or "").lower()
-        if "security" in cat or "infra" in cat: return "Core protocol teams, DAO security committees, and institutional infrastructure providers managing production smart-contract systems."
-        if "defi" in cat: return "Liquidity providers, yield optimizers, and decentralized exchange participants seeking risk-managed exposure."
-        return "Early adoption is targeting institutional and developer-centric ecosystem participants."
+        """Evidence-bound audience - no assumptions."""
+        # Check if we have actual evidence of target users
+        if project.description and any(term in project.description.lower() for term in ['developer', 'protocol', 'institutional', 'enterprise']):
+            return "Target audience inferred from project description. Specific user segments have not been explicitly disclosed."
+        return "Target user base has not been publicly specified."
 
     def _get_exclusion_statement(self, project):
-        cat = (project.category or "").lower()
-        if "security" in cat: return "This project is not a traditional audit firm, a consumer-facing monitoring dashboard, or a post-mortem analytics tool."
-        if "infra" in cat: return "This is not a retail-facing application or trading interface."
-        return "This project is not a retail-focused consumer application."
-
-    def _get_building_explanation(self, project):
-        cat = (project.category or "").lower()
-        article = "an" if "ethereum" in cat or "infra" in cat or cat.startswith('e') else "a"
-        if not project.description:
-            return f"{project.name} is building a programmable layer for {project.category or 'decentralized infrastructure'} that enables protocols to define logic and trigger predefined actions under specific on-chain conditions. The system appears intended to operate as security middleware."
-        return f"{project.name} is building {article} {project.category or 'system'} designed to enable {project.description}. The system aims to shift {project.sector or 'blockchain'} operations from manual oversight to deterministic, logic-driven execution, operating as programmable middleware."
+        """Evidence-bound exclusions - only state what we can verify."""
+        if project.category:
+            return f"Classified as {project.category}. Specific scope boundaries and non-goals have not been publicly documented."
+        return "Project scope and exclusions have not been explicitly defined in available sources."
 
     def _get_architecture_overview(self, project):
-        return "Public documentation suggests a modular architecture consisting of detection logic (traps), evaluation nodes, and execution contracts. These components appear intended to separate threat definition, condition evaluation, and response execution responsibilities for deterministic defensive scaling."
+        """Strictly evidence-bound architecture description."""
+        if project.github_url:
+            return f"Technical architecture documentation is available in the project's public repository: {project.github_url}. Detailed system design should be verified directly from source materials."
+        elif project.website:
+            return f"No technical architecture documentation has been identified in public sources. System design remains unverified. Primary source: {project.website}"
+        else:
+            return "No technical architecture documentation is available for independent verification. System design, component structure, and implementation details are undisclosed."
 
     def _get_risks_and_unknowns(self, project, funding):
-        risks = [
-            "• Effectiveness of automated logic in novel exploit scenarios or complex market conditions is unproven publicly.",
-            "• Integration complexity and operational overhead for protocol teams is currently unquantified due to early-stage documentation.",
-            "• Governance, control mechanisms, and decentralization roadmap details are not fully disclosed in current technical specifications.",
-            "• Adoption trajectory remains unclear pending wide-scale production deployments and verified usage case studies."
-        ]
+        """Evidence-bound risk assessment - only factual gaps."""
+        risks = []
+        
+        # Only add risks based on actual missing evidence
         if not project.github_url:
-            risks.append("• Technical transparency risk: Core codebase is not available for independent verification via public repositories.")
-        if not funding:
-            risks.append("• Financial sustainability risk: No confirmed institutional funding rounds or capital reserves disclosed.")
-        return risks
+            risks.append("• Technical verification constraint: No public code repository identified. Independent security review and architecture validation are not possible without source access.")
+        
+        if not funding or len(funding) == 0:
+            risks.append("• Financial disclosure gap: No institutional funding rounds or capital structure information has been publicly disclosed.")
+        
+        if not project.team_members or len(project.team_members) == 0:
+            risks.append("• Team transparency gap: Core team member identities, backgrounds, and roles have not been publicly disclosed.")
+        
+        if not project.description:
+            risks.append("• Scope ambiguity: Project objectives, technical approach, and value proposition are not documented in identified sources.")
+        
+        # Only add adoption risk if we have zero metrics
+        if not project.tvl and not project.dau and not project.github_stars:
+            risks.append("• Adoption status unknown: No public usage metrics, on-chain activity data, or community engagement indicators are available.")
+        
+        # If we have literally nothing, state it clearly
+        if len(risks) >= 4:
+            risks.append("• Intelligence confidence: This profile is based on minimal verified signals. Comprehensive due diligence requires direct engagement with project sources.")
+        
+        return risks if risks else ["• No critical intelligence gaps identified based on available disclosure standards for projects at this stage."]
+
+    def _get_team_info(self, project):
+        """Evidence-bound team disclosure statement."""
+        if project.team_members and len(project.team_members) > 0:
+            return f"{len(project.team_members)} team member(s) identified in public sources. Verification status: {'Confirmed' if project.is_verified else 'Unverified'}."
+        return "No team member identities, roles, or backgrounds have been disclosed in identified public sources."
+    
+    def _get_positioning_statement(self, project):
+        """Evidence-bound positioning - only state what we can verify."""
+        parts = []
+        if project.sector:
+            parts.append(f"Sector: {project.sector}")
+        if project.category:
+            parts.append(f"Category: {project.category}")
+        
+        if parts:
+            return f"{'. '.join(parts)}. Specific market positioning, competitive differentiation, and strategic partnerships have not been publicly documented."
+        return "Market sector, category classification, and ecosystem positioning have not been disclosed."
     
