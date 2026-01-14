@@ -63,6 +63,7 @@ class WebResearchAdapter:
         if not results["name"]:
             results["name"] = query.replace("@", "").capitalize()
 
+        logger.info(f"[SIGNAL] Identity Synthesis: Optimized identity for '{results['name']}' -> Website: {results['website']}, Twitter: {results['twitter']}")
         return results
 
     def _scrape_and_parse(self, url: str, results: Dict[str, Any], depth: int = 1):

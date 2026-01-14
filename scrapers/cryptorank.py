@@ -735,6 +735,10 @@ class CryptoRankScraper:
                     db.add(project)
                     db.commit()
                     db.refresh(project)
+                    
+                    # Log high-value intelligence signal for specialized tracking
+                    logger.info(f"[SIGNAL] Forensic Discovery: '{project_name}' ingested. Sector: {identity.get('sector_hint')}, Hiring: {identity.get('hiring')}, Website: {identity.get('website')}")
+                    
                     logger.success(f"Forensic Discovery: '{project_name}' ingested. Hiring: {identity.get('hiring')}")
                     return self.sync_project_on_demand(project.name)
             

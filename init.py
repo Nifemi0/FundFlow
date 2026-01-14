@@ -4,6 +4,10 @@ Sets up database, runs initial scraper, etc.
 """
 import sys
 from loguru import logger
+from utils.logger import setup_app_logger
+
+# Initialize Logger for Init script
+setup_app_logger("init")
 
 from database.queries import init_db, get_db
 from config.settings import settings

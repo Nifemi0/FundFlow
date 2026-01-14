@@ -33,14 +33,10 @@ from bot.handlers import (
 )
 
 
-def setup_logging():
-    """Configure logging."""
-    logger.add(
-        "logs/fundflow_{time}.log",
-        rotation="1 day",
-        retention="30 days",
-        level=settings.log_level
-    )
+from utils.logger import setup_app_logger
+
+# Initialize Centralized Logger
+setup_app_logger("bot")
 
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -75,7 +71,6 @@ async def post_init(application: Application):
 def main():
     """Main function to run the bot."""
     # Setup
-    setup_logging()
     logger.info("Starting FundFlow Telegram Bot...")
     
     # Create application
