@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: fundflow_db
+    environment:
+      POSTGRES_DB: fundflow
+      POSTGRES_USER: fundflow
+      POSTGRES_PASSWORD: fundflow
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fundflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: fundflow_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # FundFlow Bot (uncomment when ready to run)
+  # bot:
+  #   build: .
+  #   container_name: fundflow_bot
+  #   environment:
+  #     - DATABASE_URL=postgresql://fundflow:fundflow@postgres:5432/fundflow
+  #     - REDIS_URL=redis://redis:6379/0
+  #   env_file:
+  #     - config/.env
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./logs:/app/logs
+
+volumes:
+  postgres_data:

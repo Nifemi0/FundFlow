@@ -1,0 +1,18 @@
+[Unit]
+Description=FundFlow Institutional Intelligence Bot
+After=network.target postgresql.service redis.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/.gemini/antigravity/scratch/fundflow
+Environment=PYTHONPATH=/root/.gemini/antigravity/scratch/fundflow
+EnvironmentFile=/root/.gemini/antigravity/scratch/fundflow/config/.env
+ExecStart=/root/.gemini/antigravity/scratch/fundflow/venv/bin/python3 bot/main.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/root/.gemini/antigravity/scratch/fundflow/logs/bot.log
+StandardError=append:/root/.gemini/antigravity/scratch/fundflow/logs/bot_error.log
+
+[Install]
+WantedBy=multi-user.target
