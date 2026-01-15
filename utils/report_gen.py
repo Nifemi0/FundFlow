@@ -157,16 +157,27 @@ class PDFReportGenerator:
             context_statement="Adoption and usage metrics are strictly limited to production data or verified on-chain signals."
         )
 
+        # Build a context-aware description for minimal-signal projects
+        minimal_signals = []
+        if project.twitter_handle:
+            minimal_signals.append(f"X/Twitter: @{project.twitter_handle}")
+        if project.website:
+            minimal_signals.append(f"Website: {project.website}")
+        if project.github_url:
+            minimal_signals.append(f"GitHub: {project.github_url}")
+        
+        signal_summary = ", ".join(minimal_signals) if minimal_signals else "social media presence"
+        
         return IntelligenceDossier(
             header=header,
             is_emerging=is_emerging,
             identity=IdentitySection(
-                what_it_is=project.description if project.description else f"Project identity and core value proposition have not been publicly disclosed. Classification: {project.category or 'Unspecified'}.",
+                what_it_is=project.description if project.description else f"Early-stage project detected via {signal_summary}. Comprehensive project description and value proposition are not yet publicly available.",
                 problem_it_addresses=self._get_problem_statement(project),
                 who_it_is_for=self._get_target_audience(project),
                 what_it_is_not=self._get_exclusion_statement(project)
             ),
-            core_explanation=project.description if project.description else f"{project.name}: Core technical approach and system objectives are not documented in identified public sources. Further intelligence requires direct project engagement.",
+            core_explanation=project.description if project.description else f"{project.name} is an emerging project in the {project.sector or 'blockchain'} ecosystem. Technical documentation, system architecture, and detailed objectives have not been publicly disclosed. This profile represents an early detection signal requiring direct verification.",
             architecture_overview=self._get_architecture_overview(project),
             build_status=BuildStatusSection(
                 repo_url=project.github_url,

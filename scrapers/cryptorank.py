@@ -721,7 +721,7 @@ class CryptoRankScraper:
                         telegram_url=identity.get("telegram"),
                         discord_url=identity.get("discord"),
                         sector=identity.get("sector_hint"),
-                        description=identity.get("description") or f"Automatically discovered project: {project_name}",
+                        description=identity.get("description"),  # Use None if no description found
                         data_confidence=40, # Increased confidence due to deep forensics
                         is_verified=False,
                         verification_source=f"Deep Forensic Mesh via {query_type.value if query_type else 'Manual Query'}",
